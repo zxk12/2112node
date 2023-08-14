@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="./js/jQuery-3.6.0.min.js"></script>
+    <title>1</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .box {
+            width: 900px;
+            border: 2px solid cyan;
+            margin: 0 auto;
+        }
+
+        .box .box-top{
+            margin: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #000;
+        }
+
+        .box .box-bottom{
+            margin: 30px;
+        }
+
+        .box .box-top .xx .name,
+        .box .box-top .xx .age{
+            height: 26px;
+            width: 100%;
+            padding-left: 10px;
+            box-sizing: border-box;
+        }
+
+        .box .box-top .xx p{
+            margin: 10px 0;
+        }
+
+        .box .box-top .xx{
+            margin-bottom: 10px;
+        }
+
+        .box .box-top .add{
+            background-color: blue;
+            color: white;
+            padding: 6px;
+            border: none;
+        }
+
+        .box .box-top .search{
+            background-color: red;
+            color: white;
+            padding: 6px;
+            border: none;
+        }
+
+        .box-bottom .bb{
+            width: 100%;
+        }
+
+        .box-bottom .bb h2{
+            text-align: center;
+        }
+
+        table,
+        thead,
+        tfoot,
+        tr,
+        th,
+        td {
+            box-sizing: border-box;
+            border: 2px solid #ddd;
+            text-align: center;
+            border-collapse: collapse;
+            padding: 6px;
+            color: #000;
+        }
+
+        th,td{
+            width: 210px;
+        }
+
+        .reset{
+            background-color: red;
+            color: white;
+            padding: 6px;
+            border: none;
+            margin-top: 6px;
+        }
+
+        .box-reset{
+            display: flex;
+            justify-content: end;
+        }
+
+        input{
+            outline: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="box">
+        <div class="box-top">
+            <div class="xx">
+                <p>用户名：</p>
+                <input type="text" placeholder="输入用户名" class="name">
+                <p>年龄：</p>
+                <input type="text" placeholder="输入年龄" class="age">
+            </div>
+            <button class="add">添加</button>
+            <button class="search">搜索</button>
+        </div>
+
+        <div class="box-bottom">
+            <div class="bb">
+                <h2>用户信息表</h2>
+            </div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>序号</th>
+                        <th>姓名</th>
+                        <th>年龄</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody class="wrap">
+                    <tr>
+                        <td>1</td>
+                        <td>张三</td>
+                        <td>33</td>
+                        <td>删除</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="box-reset">
+                <button class="reset">删除全部</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        $(function () {
+            select_pruduct()
+            $(".age").on("click", () => {
+                if ($(".age").focus()) {
+                    $(".age").css({
+                        border: "1px solid #ddd"
+                    })
+                }
+            })
+            $(".name").on("click", () => {
+                if ($(".name").focus()) {   
+                    $(".name").css({
+                        border: "1px solid #ddd"
+                    })
+                }
+            })
+
+
+            $(".add").on("click", function () {
+                if ($(".age").val() > 200) {
+                    alert("请输入200以内的数")
+                    $(".age").val("");
+                    $(".age").css({
+                        border: "1px solid red"
+                    })
+                    $(".age").focus();
+                    return
+                }
+                if (!$(".name").val()) {
+                    $(".name").css({
+                        border: "1px solid red"
+                    })
+                    $(".name").focus();
+                    return;
+                }
+                if (!$(".age").val()) {
+                    $(".age").css({
+                        border: "1px solid red"
+                    })
+                    $(".age").focus()
+                    return;
+                }
+
+                $.ajax({
+                    url: "http://127.0.0.1:2112/xuekun",
+                    type: "get",
+                    data: {
+                        name: $(".name").val(),
+                        age: $(".age").val()
+                    },
+                    success: (res) => {
+                        console.log(res);
+                        if (res.code == 200) select_pruduct()
+                        $(".name").val("")
+                        $(".age").val("")
+                    }
+                })
+            })
+
+            // 渲染数据函数
+            function setProduct(arr) {
+                var str = "";
+                $.each(arr, function (i) {
+                    // console.log(this);
+                    str += `<tr data-id=${this.id}><td>${i + 1}</td>
+                            <td>${this.username}</td>
+                            <td>${this.age}</td>
+                            <td class="del">删除</td></tr>`
+                })
+                $(".wrap").html(str)
+            }
+            // 渲染首页首次加载页面
+            function select_pruduct() {
+                $.ajax({
+                    url: "http://127.0.0.1:2112/set_pruduct",
+                    type: "get",
+                    success: (res) => {
+                        // console.log(res);
+                        if (res.code == 200) setProduct(res.value)
+                    }
+                })
+            }
+
+
+            //删除
+            $(".wrap").on("click", ".del", function () {
+                var ind = $(this).parent("tr").attr("data-id");
+                console.log(ind);
+                $.ajax({
+                    url: "http://127.0.0.1:2112/del_pruduct",
+                    type: "get",
+                    data: {
+                        id: ind
+                    },
+                    success: (res) => {
+                        console.log(res);
+                    }
+                })
+                $(this).parents("tr").remove();
+            })
+
+            // 搜索
+            $(".search").on("click", () => {
+                $.ajax({
+                    url: "http://127.0.0.1:2112/sou_pruduct",
+                    type: "get",
+                    data: {
+                        name: $(".name").val()
+                    },
+                    success: (res) => {
+                        console.log(res);
+                        if (res.code == 200) setProduct(res.value)
+                    }
+                })
+            })
+
+            // 重置/删除全部
+            $(".reset").on("click", () => {
+                $.ajax({
+                    url: "http://127.0.0.1:2112/delall_pruduct",
+                    type: "get",
+                    success: (res) => {
+                        console.log(res);
+                        if (res.code == 300) {
+                            $('.wrap').empty();
+                        }
+                    }
+                })
+            })
+
+        })
+    </script>
+</body>
+
+</html>
